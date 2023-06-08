@@ -1,0 +1,81 @@
+
+Parameters:
+  StackParameterName:
+    Description: Name of stack to import
+    Type: String
+    Default: SonarDBCluster
+  EnvironmentName:
+      Description: An environment name that is prefixed to resource names
+      Type: String
+      Default: SonarDBCluster
+
+  #TO-DO : Parameterize instance type
+
+
+Resources:
+  RDSDBInstance1: 
+    Properties: 
+      DBClusterIdentifier: 
+        Fn::ImportValue: 
+          'Fn::Sub': '${StackParameterName}-DBCluster1'
+      DBInstanceClass: db.t3.small
+      DBParameterGroupName: 
+        Ref: RDSDBParameterGroup
+      DBSubnetGroupName: 
+        Fn::ImportValue: 
+          'Fn::Sub': '${StackParameterName}-DBSubnetGroup1'
+      Engine: aurora-mysql
+      Tags:
+        - Key: Name
+          Value: !Sub
+            - "${EnvironmentName}1"
+            - EnvironmentName: !Ref EnvironmentName
+    Type: "AWS::RDS::DBInstance"
+
+  RDSDBInstance2: 
+    Properties: 
+      DBClusterIdentifier: 
+        Fn::ImportValue: 
+          'Fn::Sub': '${StackParameterName}-DBCluster2'
+      DBInstanceClass: db.t3.small
+      DBParameterGroupName: 
+        Ref: RDSDBParameterGroup
+      DBSubnetGroupName: 
+        Fn::ImportValue: 
+          'Fn::Sub': '${StackParameterName}-DBSubnetGroup2'
+      Engine: aurora-mysql
+      Tags:
+        - Key: Name
+          Value: !Sub
+            - "${EnvironmentName}2"
+            - EnvironmentName: !Ref EnvironmentName
+    Type: "AWS::RDS::DBInstance"
+
+  RDSDBInstance3: 
+    Properties: 
+      DBClusterIdentifier: 
+        Fn::ImportValue: 
+          'Fn::Sub': '${StackParameterName}-DBCluster3'
+      DBInstanceClass: db.t3.small
+      DBParameterGroupName: 
+        Ref: RDSDBParameterGroup
+      DBSubnetGroupName: 
+        Fn::ImportValue: 
+          'Fn::Sub': '${StackParameterName}-DBSubnetGroup3'
+      Engine: aurora-mysql
+      Tags:
+        - Key: Name
+          Value: !Sub
+            - "${EnvironmentName}3"
+            - EnvironmentName: !Ref EnvironmentName
+    Type: "AWS::RDS::DBInstance"
+
+  RDSDBParameterGroup:
+    Type: 'AWS::RDS::DBParameterGroup'
+    Properties:
+      Description: CloudFormation Sample Aurora Parameter Group
+      Family: aurora-mysql5.7
+      Parameters:
+        sql_mode: IGNORE_SPACE
+        max_allowed_packet: 1024
+        innodb_buffer_pool_size: '{DBInstanceClassMemory*3/4}'

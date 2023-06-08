@@ -1,0 +1,127 @@
+Parameters:
+  StackParameterName:
+    Description: Name of stack to import
+    Type: String
+    Default: SonarPrivate
+  EnvironmentName:
+      Description: An environment name that is prefixed to resource names
+      Type: String
+      Default: SonarDBCluster
+
+Resources:
+
+  myDBSubnetGroup1: 
+    Properties: 
+      DBSubnetGroupDescription: myDBSubnetGroup1
+      SubnetIds: 
+        - Fn::ImportValue:
+            'Fn::Sub': '${StackParameterName}-PrivateSubnetID1'
+        - Fn::ImportValue:
+            'Fn::Sub': '${StackParameterName}-PrivateSubnetID2'
+    Type: "AWS::RDS::DBSubnetGroup"
+
+  myDBSubnetGroup2: 
+    Properties:
+      DBSubnetGroupDescription: myDBSubnetGroup2
+      SubnetIds: 
+        - Fn::ImportValue:
+            'Fn::Sub': '${StackParameterName}-PrivateSubnetID2'
+        - Fn::ImportValue:
+            'Fn::Sub': '${StackParameterName}-PrivateSubnetID3'
+    Type: "AWS::RDS::DBSubnetGroup"
+
+  myDBSubnetGroup3: 
+    Properties: 
+      DBSubnetGroupDescription: myDBSubnetGroup3
+      SubnetIds: 
+        - Fn::ImportValue:
+            'Fn::Sub': '${StackParameterName}-PrivateSubnetID1'
+        - Fn::ImportValue:
+            'Fn::Sub': '${StackParameterName}-PrivateSubnetID3'
+    Type: "AWS::RDS::DBSubnetGroup"
+
+  RDSCluster1: 
+    Properties: 
+      DBSubnetGroupName: !Ref myDBSubnetGroup1
+      MasterUserPassword: password
+      MasterUsername: user
+      Engine: aurora-mysql
+      EngineMode: provisioned
+      AvailabilityZones: 
+        - !Select [ 0, !GetAZs  '' ]
+      Tags:
+        - Key: Name
+          Value: !Sub
+            - "${EnvironmentName}1"
+            - EnvironmentName: !Ref EnvironmentName
+    Type: "AWS::RDS::DBCluster"
+
+  RDSCluster2: 
+    Properties: 
+      DBSubnetGroupName: !Ref myDBSubnetGroup2
+      MasterUserPassword: password
+      MasterUsername: user
+      Engine: aurora-mysql
+      EngineMode: provisioned
+      AvailabilityZones: 
+        - !Select [ 1, !GetAZs  '' ]
+      Tags:
+        - Key: Name
+          Value: !Sub
+            - "${EnvironmentName}2"
+            - EnvironmentName: !Ref EnvironmentName
+    Type: "AWS::RDS::DBCluster"
+
+  RDSCluster3: 
+    Properties:
+      MasterUserPassword: password
+      MasterUsername: user
+      DBSubnetGroupName: !Ref myDBSubnetGroup3
+      Engine: aurora-mysql
+      EngineMode: provisioned
+      AvailabilityZones:
+        - !Select [ 2, !GetAZs  '' ]
+      Tags:
+        - Key: Name
+          Value: !Sub
+            - "${EnvironmentName}3"
+            - EnvironmentName: !Ref EnvironmentName
+    Type: "AWS::RDS::DBCluster"
+
+Outputs:
+  DBCluster1:
+    Description: A reference to the created DB cluster
+    Value: !Ref RDSCluster1
+    Export:
+      Name: !Sub "${AWS::StackName}-DBCluster1"
+
+  DBCluster2:
+    Description: A reference to the created DB cluster
+    Value: !Ref RDSCluster2
+    Export:
+      Name: !Sub "${AWS::StackName}-DBCluster2"
+
+  DBCluster3:
+    Description: A reference to the created DB cluster
+    Value: !Ref RDSCluster3
+    Export:
+      Name: !Sub "${AWS::StackName}-DBCluster3"
+
+  DBSubnetGroup1:
+    Description: A reference to the created DB SubnetGroup
+    Value: !Ref myDBSubnetGroup1
+    Export:
+      Name: !Sub "${AWS::StackName}-DBSubnetGroup1"
+
+  DBSubnetGroup2:
+    Description: A reference to the created DB SubnetGroup
+    Value: !Ref myDBSubnetGroup2
+    Export:
+      Name: !Sub "${AWS::StackName}-DBSubnetGroup2"
+
+  DBSubnetGroup3:
+    Description: A reference to the created DB SubnetGroup
+    Value: !Ref myDBSubnetGroup3
+    Export:
+      Name: !Sub "${AWS::StackName}-DBSubnetGroup3"
+

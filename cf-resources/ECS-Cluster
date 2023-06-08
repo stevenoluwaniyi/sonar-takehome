@@ -1,0 +1,134 @@
+
+Parameters:
+  StackParameterName:
+    Description: Name of stack to import
+    Type: String
+    Default: SonarECS
+  EnvironmentName:
+      Description: An environment name that is prefixed to resource names
+      Type: String
+      Default: SonarECS
+
+  ASGArn1:
+      Description: An ARN
+      Type: String
+      Default: arn:aws:autoscaling:us-east-1:400252015451:autoScalingGroup:2b3cbf0f-7b23-4457-8da5-fd5b00425054:autoScalingGroupName/SonarASG-myASG1-9CNBTILC1GC6
+
+  ASGArn2:
+      Description: An ARN
+      Type: String
+      Default: arn:aws:autoscaling:us-east-1:400252015451:autoScalingGroup:1fe0da7f-925a-40be-bce5-fde7e04082f3:autoScalingGroupName/SonarASG-myASG3-LK55V25V2Q77
+
+  ASGArn3:
+      Description: An ARN
+      Type: String
+      Default: arn:aws:autoscaling:us-east-1:400252015451:autoScalingGroup:5e8ef9df-420a-466a-98a5-45a54e7e5ec6:autoScalingGroupName/SonarASG-myASG2-755D453N1WXF
+
+#To-Do: Test if one cluster will suffice
+Resources:
+    CapacityProvider1:
+        Type: AWS::ECS::CapacityProvider
+        Properties: 
+            AutoScalingGroupProvider: 
+                AutoScalingGroupArn: !Ref ASGArn1
+            Name: SonarCapacityProvider1
+            Tags:
+              - Key: Name
+                Value: !Sub
+                  - "${EnvironmentName}Cluster1"
+                  - EnvironmentName: !Ref EnvironmentName
+
+    ECSCluster1:
+        Type: AWS::ECS::Cluster
+        Properties: 
+            CapacityProviders: 
+              - !Ref CapacityProvider1
+            DefaultCapacityProviderStrategy:
+              - CapacityProvider: !Ref CapacityProvider1
+            ClusterName: !Sub
+                - "${EnvironmentName}-Cluster1"
+                - EnvironmentName: !Ref EnvironmentName
+
+    CapacityProvider2:
+        Type: AWS::ECS::CapacityProvider
+        Properties: 
+            AutoScalingGroupProvider: 
+                AutoScalingGroupArn: !Ref ASGArn2
+            Name: SonarCapacityProvider2
+            Tags:
+              - Key: Name
+                Value: !Sub
+                  - "${EnvironmentName}Cluster2"
+                  - EnvironmentName: !Ref EnvironmentName
+
+    ECSCluster2:
+        Type: AWS::ECS::Cluster
+        Properties: 
+            CapacityProviders: 
+              - !Ref CapacityProvider2
+            ClusterName: !Sub
+                - "${EnvironmentName}-Cluster2"
+                - EnvironmentName: !Ref EnvironmentName
+
+
+    CapacityProvider3:
+        Type: AWS::ECS::CapacityProvider
+        Properties: 
+            AutoScalingGroupProvider: 
+                AutoScalingGroupArn: !Ref ASGArn3
+            Name: SonarCapacityProvider3
+            Tags:
+              - Key: Name
+                Value: !Sub
+                  - "${EnvironmentName}Cluster3"
+                  - EnvironmentName: !Ref EnvironmentName
+
+    ECSCluster3:
+        Type: AWS::ECS::Cluster
+        Properties: 
+            CapacityProviders: 
+              - !Ref CapacityProvider3
+            ClusterName: !Sub
+                - "${EnvironmentName}-Cluster3"
+                - EnvironmentName: !Ref EnvironmentName
+
+Outputs:
+    CapacityCluster1:
+      Description: ECSCluster based on AZ 
+      Value: !Ref CapacityProvider1
+      Export:
+        Name: !Sub "${AWS::StackName}-CapacityProvider1"
+
+    CapacityCluster2:
+      Description: ECSCluster based on AZ 
+      Value: !Ref CapacityProvider2
+      Export:
+        Name: !Sub "${AWS::StackName}-CapacityProvider2"
+
+    CapacityCluster3:
+      Description: ECSCluster based on AZ 
+      Value: !Ref CapacityProvider3
+      Export:
+        Name: !Sub "${AWS::StackName}-CapacityProvider3"
+
+    ECSCluster1:
+      Description: ECSCluster based on AZ 
+      Value: !Ref ECSCluster1
+      Export:
+        Name: !Sub "${AWS::StackName}-ECSCluster1"
+
+    ECSCluster2:
+      Description: ECSCluster based on AZ 
+      Value: !Ref ECSCluster2
+      Export:
+        Name: !Sub "${AWS::StackName}-ECSCluster2"
+
+    ECSCluster3:
+      Description: ECSCluster based on AZ 
+      Value: !Ref ECSCluster3
+      Export:
+        Name: !Sub "${AWS::StackName}-ECSCluster3"
+
+
+
+

@@ -1,0 +1,103 @@
+Parameters:
+  AzStackParameterName:
+    Description: CF Stackname for Availability Zones for private subnet
+    Type: String
+    Default: SonarPrivate
+  
+  LtStackParameterName:
+    Description: CF Stackname for LaunchTemplate 
+    Type: String
+    Default: SonarASG
+
+  SgStackParameterName:
+    Description: CF Stackname for Security Group for Sonar instances and ECS
+    Type: String
+    Default: SonarSG
+
+  PrivateSubnetStackName:
+    Description: CF Stackname for private subnets
+    Type: String
+    Default: SonarPrivate
+
+  EnvironmentName:
+      Description: An environment name that is prefixed to resource names
+      Type: String
+      Default: EC2
+
+
+Resources:
+  SonarEC2Instance1:
+    Type: AWS::EC2::Instance
+    Properties: 
+      AvailabilityZone: !ImportValue
+        'Fn::Sub': '${AzStackParameterName}-AZ1'
+      LaunchTemplate: 
+        LaunchTemplateId: !ImportValue
+          'Fn::Sub': '${LtStackParameterName}-LaunchTemplate'
+        Version: !ImportValue
+          'Fn::Sub': '${LtStackParameterName}-LaunchVersion'
+      SecurityGroupIds:
+        - Fn::ImportValue:
+            'Fn::Sub': '${SgStackParameterName}-SG'
+      SubnetId: !ImportValue
+        'Fn::Sub': '${PrivateSubnetStackName}-PrivateSubnetID1'
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-SonarInstance1"
+
+  SonarEC2Instance2:
+    Type: AWS::EC2::Instance
+    Properties: 
+      AvailabilityZone: !ImportValue
+        'Fn::Sub': '${AzStackParameterName}-AZ2'
+      LaunchTemplate: 
+        LaunchTemplateId: !ImportValue
+          'Fn::Sub': '${LtStackParameterName}-LaunchTemplate'
+        Version: !ImportValue
+          'Fn::Sub': '${LtStackParameterName}-LaunchVersion'
+      SecurityGroupIds:
+        - Fn::ImportValue:
+            'Fn::Sub': '${SgStackParameterName}-SG'
+      SubnetId: !ImportValue
+        'Fn::Sub': '${PrivateSubnetStackName}-PrivateSubnetID2'
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-SonarInstance2"
+
+  SonarEC2Instance3:
+    Type: AWS::EC2::Instance
+    Properties: 
+      AvailabilityZone: !ImportValue
+        'Fn::Sub': '${AzStackParameterName}-AZ3'
+      LaunchTemplate: 
+        LaunchTemplateId: !ImportValue
+          'Fn::Sub': '${LtStackParameterName}-LaunchTemplate'
+        Version: !ImportValue
+          'Fn::Sub': '${LtStackParameterName}-LaunchVersion'
+      SecurityGroupIds:
+        - Fn::ImportValue:
+            'Fn::Sub': '${SgStackParameterName}-SG'
+      SubnetId: !ImportValue
+        'Fn::Sub': '${PrivateSubnetStackName}-PrivateSubnetID3'
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-SonarInstance3"
+
+Outputs:
+  SonarInstance1:
+    Description: A reference to the created ec2 instance
+    Value: !Ref SonarEC2Instance1
+    Export:
+      Name: !Sub "${AWS::StackName}-EC2Instance1"
+
+  SonarInstance2:
+    Description: A reference to the created ec2 instance
+    Value: !Ref SonarEC2Instance2
+    Export:
+      Name: !Sub "${AWS::StackName}-EC2Instance2"
+
+  SonarInstance3:
+    Description: A reference to the created ec2 instance
+    Value: !Ref SonarEC2Instance3
+    Export:
+      Name: !Sub "${AWS::StackName}-EC2Instance3"

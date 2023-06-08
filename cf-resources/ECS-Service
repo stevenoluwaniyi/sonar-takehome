@@ -1,0 +1,44 @@
+Parameters:
+  ClusterStackParameterName:
+    Description: CF Stackname for Availability Zones for private subnet
+    Type: String
+    Default: SonarECSCluster
+
+  PrivateSubnetParameterName:
+    Description: CF Stackname for Availability Zones for private subnet
+    Type: String
+    Default: SonarPrivate
+
+  TaskDefStackParameterName:
+    Description: TaskDefinition Stackname for Availability Zones for private subnet
+    Type: String
+    Default: SonarECSTaskDefinition
+
+  EnvironmentName:
+      Description: An environment name that is prefixed to resource names
+      Type: String
+      Default: SonarECSService
+
+
+Resources:
+  ECSService1:
+    Type: AWS::ECS::Service
+    Properties: 
+      CapacityProviderStrategy: 
+        - CapacityProvider: !ImportValue
+            'Fn::Sub': '${ClusterStackParameterName}-CapacityProvider1'
+          Weight: 1
+      Cluster: !ImportValue
+        'Fn::Sub': '${ClusterStackParameterName}-ECSCluster1'
+      DesiredCount: 1
+      NetworkConfiguration: 
+        AwsvpcConfiguration:
+            Subnets:
+              - !ImportValue
+                'Fn::Sub': '${PrivateSubnetParameterName}-PrivateSubnetID1'
+      ServiceName: !Sub "${EnvironmentName}-ECSService1"
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-ECSService1"
+      TaskDefinition: !ImportValue
+        'Fn::Sub': '${TaskDefStackParameterName}-TaskDefinition'
