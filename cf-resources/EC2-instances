@@ -1,9 +1,4 @@
 Parameters:
-  AzStackParameterName:
-    Description: CF Stackname for Availability Zones for private subnet
-    Type: String
-    Default: SonarPrivate
-  
   LtStackParameterName:
     Description: CF Stackname for LaunchTemplate 
     Type: String
@@ -30,7 +25,7 @@ Resources:
     Type: AWS::EC2::Instance
     Properties: 
       AvailabilityZone: !ImportValue
-        'Fn::Sub': '${AzStackParameterName}-AZ1'
+        'Fn::Sub': '${PrivateSubnetStackName}-AZ1'
       LaunchTemplate: 
         LaunchTemplateId: !ImportValue
           'Fn::Sub': '${LtStackParameterName}-LaunchTemplate'
@@ -48,7 +43,7 @@ Resources:
     Type: AWS::EC2::Instance
     Properties: 
       AvailabilityZone: !ImportValue
-        'Fn::Sub': '${AzStackParameterName}-AZ2'
+        'Fn::Sub': '${PrivateSubnetStackName}-AZ2'
       LaunchTemplate: 
         LaunchTemplateId: !ImportValue
           'Fn::Sub': '${LtStackParameterName}-LaunchTemplate'
@@ -66,7 +61,7 @@ Resources:
     Type: AWS::EC2::Instance
     Properties: 
       AvailabilityZone: !ImportValue
-        'Fn::Sub': '${AzStackParameterName}-AZ3'
+        'Fn::Sub': '${PrivateSubnetStackName}-AZ3'
       LaunchTemplate: 
         LaunchTemplateId: !ImportValue
           'Fn::Sub': '${LtStackParameterName}-LaunchTemplate'

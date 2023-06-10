@@ -30,7 +30,6 @@ Parameters:
       Type: String
       Default: arn:aws:autoscaling:us-east-1:400252015451:autoScalingGroup:15ebe625-3724-45d9-b8d6-c84707e4bc13:autoScalingGroupName/SonarASG-myASG3-O3AQQVXUD03W
 
-#To-Do: Test if one cluster will suffice
 Resources:
   CapacityAssociation:
     Type: AWS::ECS::ClusterCapacityProviderAssociations

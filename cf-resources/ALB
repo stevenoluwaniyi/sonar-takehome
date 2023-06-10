@@ -15,8 +15,7 @@ Resources:
       IpAddressType: ipv4
       Name: SonarALB1
       Scheme: internet-facing
-      # SecurityGroups: 
-      #   - String
+      
       Subnets: 
         - Fn::ImportValue:
             'Fn::Sub': '${StackParameterName}-PrivateSubnetID1'

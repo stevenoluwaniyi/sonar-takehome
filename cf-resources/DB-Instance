@@ -9,7 +9,10 @@ Parameters:
       Type: String
       Default: SonarDBCluster
 
-  #TO-DO : Parameterize instance type
+  DBInstanceName:
+      Description: DB instance
+      Type: String
+      Default: db.t3.small
 
 
 Resources:
@@ -18,7 +21,7 @@ Resources:
       DBClusterIdentifier: 
         Fn::ImportValue: 
           'Fn::Sub': '${StackParameterName}-DBCluster1'
-      DBInstanceClass: db.t3.small
+      DBInstanceClass: !Ref DBInstanceName
       DBParameterGroupName: 
         Ref: RDSDBParameterGroup
       DBSubnetGroupName: 
@@ -37,7 +40,7 @@ Resources:
       DBClusterIdentifier: 
         Fn::ImportValue: 
           'Fn::Sub': '${StackParameterName}-DBCluster2'
-      DBInstanceClass: db.t3.small
+      DBInstanceClass: !Ref DBInstanceName
       DBParameterGroupName: 
         Ref: RDSDBParameterGroup
       DBSubnetGroupName: 
@@ -56,7 +59,7 @@ Resources:
       DBClusterIdentifier: 
         Fn::ImportValue: 
           'Fn::Sub': '${StackParameterName}-DBCluster3'
-      DBInstanceClass: db.t3.small
+      DBInstanceClass: !Ref DBInstanceName
       DBParameterGroupName: 
         Ref: RDSDBParameterGroup
       DBSubnetGroupName: 

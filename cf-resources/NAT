@@ -2,14 +2,17 @@ Parameters:
   PublicSubnetStackName:
     Description: Name of stack to import
     Type: String
+    Default: SonarPublic
 
   EnvironmentName:
       Description: An environment name that is prefixed to resource names
       Type: String
+      Default: SonarNAT
 
   PrivateSubnetStackName:
     Description: Name of stack to import
     Type: String
+    Default: SonarPrivate
 
 Resources:
   NATGateway1:
