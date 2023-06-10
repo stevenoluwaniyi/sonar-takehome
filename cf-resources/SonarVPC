@@ -8,6 +8,12 @@ Parameters:
     Type: String
     Default: 10.192.0.0/16
 
+  AWSRegion:
+    Description: Region to deploy VPC
+    Type: String
+    Default: us-east-1
+
+
 
 Resources:
   VPC:
