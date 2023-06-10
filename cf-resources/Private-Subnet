@@ -129,3 +129,15 @@ Outputs:
     Value: !Ref PrivateSonarSubnet1
     Export:
       Name: !Sub "${AWS::StackName}-PrivateCIDR1"
+
+  PrivateSubnetIDCIDR2:
+    Description: A reference to the created private subnet
+    Value: !Ref PrivateSonarSubnet2
+    Export:
+      Name: !Sub "${AWS::StackName}-PrivateCIDR2"
+
+  PrivateSubnetIDCIDR3:
+    Description: A reference to the created private subnet
+    Value: !Ref PrivateSonarSubnet3
+    Export:
+      Name: !Sub "${AWS::StackName}-PrivateCIDR3"

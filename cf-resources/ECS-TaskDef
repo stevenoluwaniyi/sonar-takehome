@@ -19,23 +19,12 @@ Resources:
             - "FOREGROUND"
           Memory: 512
           Essential: true
-        - 
-          Name: "busybox"
-          Image: "busybox"
-          Cpu: 256
-          EntryPoint: 
-            - "sh"
-            - "-c"
-          Memory: 512
-          Command: 
-            - "/bin/sh -c \"while true; do /bin/date > /var/www/my-vol/date; sleep 1; done\""
-          Essential: false
-          DependsOn:
-            - ContainerName: my-app
-              Condition: START
-          VolumesFrom: 
-            - 
-              SourceContainer: "my-app"
+          logConfiguration:
+            logDriver: "awslogs"
+            options:
+              awslogs-group: "/ecs/ec2-definition"
+              awslogs-region: "us-east-1"
+              awslogs-stream-prefix: "ecs"
       Volumes: 
         - 
           Host: 

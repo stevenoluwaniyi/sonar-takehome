@@ -1,9 +1,10 @@
+
 AWSTemplateFormatVersion: '2010-09-09'
 Parameters:
   LatestAmiId:
     Description: Region specific image from the Parameter Store
     Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
-    Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
+    Default: '/aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id'
   InstanceType:
     Description: Amazon EC2 instance type for the instances
     Type: String
@@ -12,9 +13,6 @@ Parameters:
       - t3.small
       - t3.medium
     Default: t3.micro
-  # Subnets:
-  #   Type: 'List<AWS::EC2::Subnet::Id>'
-  #   Description: A list of subnets for the Auto Scaling group
 
   StackParameterName:
     Description: Name of stack to import
@@ -29,7 +27,12 @@ Parameters:
   ClusterStackParameterName:
     Description: Name of stack to import
     Type: String
-    Default: SonarECSCluster
+    Default: SonarECS
+
+  ProfiletackParameterName:
+    Description: Name of stack to import
+    Type: String
+    Default: SonarInstanceProfile
 
 Resources:
   myLaunchTemplate:
@@ -42,10 +45,15 @@ Resources:
         SecurityGroupIds: 
           - !ImportValue
               'Fn::Sub': '${SGStackParameterName}-PrivateSG'
+        IamInstanceProfile:
+          Arn: 
+            !ImportValue
+              'Fn::Sub': '${ProfiletackParameterName}-Arn'
         UserData:
           Fn::Base64: !Sub |
             #!/bin/bash
-            echo ECS_CLUSTER=${ClusterStackParameterName}-ECSCluster1 >> /etc/ecs/ecs.config
+            echo ECS_CLUSTER=${ClusterStackParameterName}-Cluster >> /etc/ecs/ecs.config;
+
   myASG1:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
@@ -53,7 +61,7 @@ Resources:
         LaunchTemplateId: !Ref myLaunchTemplate
         Version: !GetAtt myLaunchTemplate.LatestVersionNumber
       MaxSize: '1'
-      MinSize: '0'
+      MinSize: '1'
       DesiredCapacity: '1'
       AvailabilityZones:
         - Fn::ImportValue:
@@ -95,8 +103,6 @@ Resources:
           - Fn::ImportValue:
               'Fn::Sub': '${StackParameterName}-PrivateSubnetID3'
 
-#!Sub arn:aws:autoscaling:*:*:autoScalingGroup:*:autoScalingGroupName/${LogicalGroupName}
-
 Outputs:
   ASG1:
     Description: ASG
@@ -127,4 +133,6 @@ Outputs:
     Value: !GetAtt myLaunchTemplate.LatestVersionNumber
     Export:
       Name: !Sub "${AWS::StackName}-LaunchVersion" 
+
+ 
 
