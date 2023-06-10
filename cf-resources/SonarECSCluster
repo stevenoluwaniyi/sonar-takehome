@@ -1,0 +1,125 @@
+
+Parameters:
+  StackParameterName:
+    Description: Name of stack to import
+    Type: String
+    Default: SonarECS
+  EnvironmentName:
+      Description: An environment name that is prefixed to resource names
+      Type: String
+      Default: SonarECS
+
+  # ASGParameterName:
+  #   Description: Name of stack to import
+  #   Type: String
+  #   Default: !Sub "${!ImportValue SonarASG-myASG1}"
+    
+
+  ASGArn1:
+      Description: An ARN
+      Type: String
+      Default: arn:aws:autoscaling:us-east-1:400252015451:autoScalingGroup:39217940-ca03-4ff6-a921-e84983c1a825:autoScalingGroupName/SonarASG-myASG1-PLO2WUAVSJF7
+
+  ASGArn2:
+      Description: An ARN
+      Type: String
+      Default: arn:aws:autoscaling:us-east-1:400252015451:autoScalingGroup:f99ea036-1c76-486d-9815-297f6a82f0d8:autoScalingGroupName/SonarASG-myASG2-VPW5XTZVAMCG
+
+  ASGArn3:
+      Description: An ARN
+      Type: String
+      Default: arn:aws:autoscaling:us-east-1:400252015451:autoScalingGroup:15ebe625-3724-45d9-b8d6-c84707e4bc13:autoScalingGroupName/SonarASG-myASG3-O3AQQVXUD03W
+
+Resources:
+  CapacityAssociation:
+    Type: AWS::ECS::ClusterCapacityProviderAssociations
+    Properties: 
+      CapacityProviders: 
+        - !Ref CapacityProvider2
+        - !Ref CapacityProvider1
+        - !Ref CapacityProvider3
+      Cluster: !Ref ECSCluster
+      DefaultCapacityProviderStrategy:
+        - CapacityProvider: !Ref CapacityProvider2 
+
+  CapacityProvider1:
+      Type: AWS::ECS::CapacityProvider
+      Properties: 
+          AutoScalingGroupProvider: 
+              AutoScalingGroupArn: !Ref ASGArn1
+              ManagedScaling:
+                Status: ENABLED
+                TargetCapacity: 100
+          Name: SonarCapacityProvider1
+          Tags:
+            - Key: Name
+              Value: !Sub
+                - "${EnvironmentName}CapacityProvider1"
+                - EnvironmentName: !Ref EnvironmentName
+
+  CapacityProvider2:
+    Type: AWS::ECS::CapacityProvider
+    Properties: 
+      AutoScalingGroupProvider: 
+        AutoScalingGroupArn: !Ref ASGArn2
+        ManagedScaling:
+          Status: ENABLED
+          TargetCapacity: 100
+      Name: SonarCapacityProviderCluster2
+      Tags:
+        - Key: Name
+          Value: !Sub
+            - "${EnvironmentName}Cluster2"
+            - EnvironmentName: !Ref EnvironmentName
+
+  CapacityProvider3:
+      Type: AWS::ECS::CapacityProvider
+      Properties: 
+          AutoScalingGroupProvider: 
+              AutoScalingGroupArn: !Ref ASGArn3
+              ManagedScaling:
+                Status: ENABLED
+                TargetCapacity: 100
+          Name: SonarCapacityProvider3
+          Tags:
+            - Key: Name
+              Value: !Sub
+                - "${EnvironmentName}Cluster3"
+                - EnvironmentName: !Ref EnvironmentName
+
+  ECSCluster:
+      Type: AWS::ECS::Cluster
+      Properties: 
+          ClusterName: !Sub
+              - "${EnvironmentName}-Cluster"
+              - EnvironmentName: !Ref EnvironmentName
+
+
+Outputs:
+    CapacityCluster1:
+      Description: ECSCluster based on AZ 
+      Value: !Ref CapacityProvider1
+      Export:
+        Name: !Sub "${AWS::StackName}-CapacityProvider1"
+
+    CapacityCluster2:
+      Description: ECSCluster based on AZ 
+      Value: !Ref CapacityProvider2
+      Export:
+        Name: !Sub "${AWS::StackName}-CapacityProvider2"
+
+    CapacityCluster3:
+      Description: ECSCluster based on AZ 
+      Value: !Ref CapacityProvider3
+      Export:
+        Name: !Sub "${AWS::StackName}-CapacityProvider3"
+
+    ECSCluster:
+      Description: ECSCluster based on AZ 
+      Value: !Ref ECSCluster
+      Export:
+        Name: !Sub "${AWS::StackName}-Cluster"
+
+
+
+

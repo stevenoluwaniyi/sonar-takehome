@@ -1,0 +1,60 @@
+Parameters:
+  StackParameterName:
+    Description: Name of stack to import
+    Type: String
+    Default: SonarPrivate
+  EnvironmentName:
+      Description: An environment name that is prefixed to resource names
+      Type: String
+      Default: SonarALB
+
+Resources:
+  LoadBalancer1:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties: 
+      IpAddressType: ipv4
+      Name: SonarALB1
+      Scheme: internet-facing
+      
+      Subnets: 
+        - Fn::ImportValue:
+            'Fn::Sub': '${StackParameterName}-PrivateSubnetID1'
+        - Fn::ImportValue:
+            'Fn::Sub': '${StackParameterName}-PrivateSubnetID2'
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}1"
+
+  LoadBalancer2:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties: 
+      IpAddressType: ipv4
+      Name: SonarALB2
+      Scheme: internet-facing
+      # SecurityGroups: 
+      #   - String
+      Subnets: 
+        - Fn::ImportValue:
+            'Fn::Sub': '${StackParameterName}-PrivateSubnetID1'
+        - Fn::ImportValue:
+            'Fn::Sub': '${StackParameterName}-PrivateSubnetID2'
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}2"
+
+  LoadBalancer3:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties: 
+      IpAddressType: ipv4
+      Name: SonarALB3
+      Scheme: internet-facing
+      # SecurityGroups: 
+      #   - String
+      Subnets: 
+        - Fn::ImportValue:
+            'Fn::Sub': '${StackParameterName}-PrivateSubnetID3'
+        - Fn::ImportValue:
+            'Fn::Sub': '${StackParameterName}-PrivateSubnetID1'
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}3"

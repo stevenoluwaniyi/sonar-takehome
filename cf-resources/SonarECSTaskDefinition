@@ -1,0 +1,40 @@
+Resources:
+  TaskDefinition: 
+    Type: AWS::ECS::TaskDefinition
+    Properties: 
+      RequiresCompatibilities:
+        - "EC2"
+      ContainerDefinitions: 
+        - 
+          Name: "my-app"
+          MountPoints: 
+            - 
+              SourceVolume: "my-vol"
+              ContainerPath: "/var/www/my-vol"
+          Image: "amazon/amazon-ecs-sample"
+          Cpu: 256
+          EntryPoint: 
+            - "/usr/sbin/apache2"
+            - "-D"
+            - "FOREGROUND"
+          Memory: 512
+          Essential: true
+          logConfiguration:
+            logDriver: "awslogs"
+            options:
+              awslogs-group: "/ecs/ec2-definition"
+              awslogs-region: "us-east-1"
+              awslogs-stream-prefix: "ecs"
+      Volumes: 
+        - 
+          Host: 
+            SourcePath: "/var/lib/docker/vfs/dir/"
+          Name: "my-vol"
+      NetworkMode: awsvpc
+
+Outputs:
+  TaskDefinition:
+    Description: Task Definition
+    Value: !Ref TaskDefinition
+    Export:
+      Name: !Sub "${AWS::StackName}-TaskDefinition"

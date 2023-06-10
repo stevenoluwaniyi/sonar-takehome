@@ -1,0 +1,105 @@
+
+Parameters:
+  PrivateSubnetStackName:
+    Description: Cloudformation stackname for Private Subnet
+    Type: String
+    Default: SonarPrivate
+
+  EnvironmentName:
+      Description: An environment name that is prefixed to resource names
+      Type: String
+      Default: SonarTG
+
+  TGPort:
+      Description: Port for Target Group
+      Type: Number
+      Default: 3001
+
+  StackParameterName:
+    Description: Name of stack to import
+    Type: String
+    Default: SonarVPC
+
+Resources:
+    SonarTG1:
+        Type: AWS::ElasticLoadBalancingV2::TargetGroup
+        Properties: 
+            IpAddressType: ipv4
+            Name: !Sub "${EnvironmentName}1"
+            Port: !Sub ${TGPort}
+            Protocol: HTTP
+            ProtocolVersion: HTTP1
+            Tags:
+                - Key: Name
+                  Value: !Sub "${EnvironmentName}1"
+            TargetType: ip
+            VpcId: 
+              Fn::ImportValue:
+                !Sub "${StackParameterName}-VPCID"
+
+    SonarTG2:
+        Type: AWS::ElasticLoadBalancingV2::TargetGroup
+        Properties: 
+            IpAddressType: ipv4
+            Name: !Sub "${EnvironmentName}2"
+            Port: !Sub ${TGPort}
+            Protocol: HTTP
+            ProtocolVersion: HTTP1
+            Tags:
+                - Key: Name
+                  Value: !Sub "${EnvironmentName}2"
+            TargetType: ip
+            VpcId: 
+              Fn::ImportValue:
+                !Sub "${StackParameterName}-VPCID"
+
+    SonarTG3:
+        Type: AWS::ElasticLoadBalancingV2::TargetGroup
+        Properties: 
+            IpAddressType: ipv4
+            Name: !Sub "${EnvironmentName}3"
+            Port: !Sub ${TGPort}
+            Protocol: HTTP
+            ProtocolVersion: HTTP1
+            Tags:
+                - Key: Name
+                  Value: !Sub "${EnvironmentName}3"
+            TargetType: ip
+            VpcId: 
+              Fn::ImportValue:
+                !Sub "${StackParameterName}-VPCID"
+
+Outputs:
+    SonarTG1:
+        Description: TG for Sonar
+        Value: !Ref SonarTG1
+        Export:
+            Name: !Sub "${AWS::StackName}-TG1"
+    SonarARN1:
+        Description: TG for Sonar
+        Value: !GetAtt SonarTG1.TargetGroupArn
+        Export:
+            Name: !Sub "${AWS::StackName}-ARN1"
+
+    SonarTG2:
+        Description: TG for Sonar
+        Value: !Ref SonarTG2
+        Export:
+            Name: !Sub "${AWS::StackName}-TG2"
+    SonarARN2:
+        Description: TG for Sonar
+        Value: !GetAtt SonarTG2.TargetGroupArn
+        Export:
+            Name: !Sub "${AWS::StackName}-ARN2"
+
+    SonarTG3:
+        Description: TG for Sonar
+        Value: !Ref SonarTG3
+        Export:
+            Name: !Sub "${AWS::StackName}-TG3"
+    SonarARN3:
+        Description: TG for Sonar
+        Value: !GetAtt SonarTG3.TargetGroupArn
+        Export:
+            Name: !Sub "${AWS::StackName}-ARN3"
+

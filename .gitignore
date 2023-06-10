@@ -39,3 +39,7 @@ Thumbs.db
 # VS code #
 .vscode/*
 .vscode
+
+
+.rpdk-config
+fragments/

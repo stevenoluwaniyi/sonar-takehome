@@ -1,0 +1,129 @@
+Parameters:
+  ClusterStackParameterName:
+    Description: CF Stackname for Availability Zones for private subnet
+    Type: String
+    Default: SonarECS
+
+  PrivateSubnetParameterName:
+    Description: CF Stackname for Availability Zones for private subnet
+    Type: String
+    Default: SonarPrivate
+
+  TaskDefStackParameterName:
+    Description: TaskDefinition Stackname for Availability Zones for private subnet
+    Type: String
+    Default: SonarECSTaskDefinition
+
+  SGStackParameterName:
+    Description: TaskDefinition Stackname for Availability Zones for private subnet
+    Type: String
+    Default: SonarSG
+
+  EnvironmentName:
+      Description: An environment name that is prefixed to resource names
+      Type: String
+      Default: SonarECSService
+
+  TGStackName:
+      Description: Stack name for ARN
+      Type: String
+      Default: SonarTG
+
+
+Resources:
+  ECSService1:
+    Type: AWS::ECS::Service
+    Properties:
+      CapacityProviderStrategy: 
+        - CapacityProvider: !ImportValue
+            'Fn::Sub': '${ClusterStackParameterName}-CapacityProvider1'
+          Weight: 1
+      Cluster: !ImportValue
+        'Fn::Sub': '${ClusterStackParameterName}-Cluster'
+      ServiceConnectConfiguration:
+        LogConfiguration:
+          LogDriver: awslogs
+          Enabled: true
+      DesiredCount: 1
+      NetworkConfiguration: 
+        AwsvpcConfiguration:
+            Subnets:
+              - !ImportValue
+                  'Fn::Sub': '${PrivateSubnetParameterName}-PrivateSubnetID1'
+            SecurityGroups:
+              - !ImportValue
+                  'Fn::Sub': '${SGStackParameterName}-PrivateSG'
+      ServiceName: !Sub "${EnvironmentName}-ECSService1"
+      LoadBalancers:
+        TargetGroupArn: 
+          Fn::ImportValue: !Sub "${TGStackName}-ARN1"
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-ECSService1"
+      TaskDefinition: !ImportValue
+        'Fn::Sub': '${TaskDefStackParameterName}-TaskDefinition'
+
+
+  ECSService2:
+    Type: AWS::ECS::Service
+    Properties:
+      CapacityProviderStrategy: 
+        - CapacityProvider: !ImportValue
+            'Fn::Sub': '${ClusterStackParameterName}-CapacityProvider2'
+          Weight: 1
+      Cluster: !ImportValue
+        'Fn::Sub': '${ClusterStackParameterName}-Cluster'
+      ServiceConnectConfiguration:
+        LogConfiguration:
+          LogDriver: awslogs
+          Enabled: true
+      DesiredCount: 1
+      LoadBalancers:
+        TargetGroupArn: 
+          Fn::ImportValue: !Sub "${TGStackName}-ARN2"
+      NetworkConfiguration: 
+        AwsvpcConfiguration:
+            Subnets:
+              - !ImportValue
+                  'Fn::Sub': '${PrivateSubnetParameterName}-PrivateSubnetID2'
+            SecurityGroups:
+              - !ImportValue
+                  'Fn::Sub': '${SGStackParameterName}-PrivateSG'
+      ServiceName: !Sub "${EnvironmentName}-ECSService2"
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-ECSService2"
+      TaskDefinition: !ImportValue
+        'Fn::Sub': '${TaskDefStackParameterName}-TaskDefinition'
+
+  ECSService3:
+    Type: AWS::ECS::Service
+    Properties:
+      CapacityProviderStrategy: 
+        - CapacityProvider: !ImportValue
+            'Fn::Sub': '${ClusterStackParameterName}-CapacityProvider3'
+          Weight: 1
+      Cluster: !ImportValue
+        'Fn::Sub': '${ClusterStackParameterName}-Cluster'
+      DesiredCount: 1
+      ServiceConnectConfiguration:
+        LogConfiguration:
+          LogDriver: awslogs
+          Enabled: true
+      LoadBalancers:
+        TargetGroupArn: 
+          Fn::ImportValue: !Sub "${TGStackName}-ARN3"
+      NetworkConfiguration: 
+        AwsvpcConfiguration:
+            Subnets:
+              - !ImportValue
+                  'Fn::Sub': '${PrivateSubnetParameterName}-PrivateSubnetID3'
+            SecurityGroups:
+              - !ImportValue
+                  'Fn::Sub': '${SGStackParameterName}-PrivateSG'
+      ServiceName: !Sub "${EnvironmentName}-ECSService3"
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-ECSService3"
+      TaskDefinition: !ImportValue
+        'Fn::Sub': '${TaskDefStackParameterName}-TaskDefinition'

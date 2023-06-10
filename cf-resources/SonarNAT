@@ -1,0 +1,88 @@
+Parameters:
+  PublicSubnetStackName:
+    Description: Name of stack to import
+    Type: String
+    Default: SonarPublic
+
+  EnvironmentName:
+      Description: An environment name that is prefixed to resource names
+      Type: String
+      Default: SonarNAT
+
+  PrivateSubnetStackName:
+    Description: Name of stack to import
+    Type: String
+    Default: SonarPrivate
+
+Resources:
+  NATGateway1:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NATGatewayEIP1.AllocationId
+      SubnetId: 
+        Fn::ImportValue: 
+          'Fn::Sub': '${PublicSubnetStackName}-PublicSubnetID1'
+      Tags:
+        - Key: Name
+          Value: !Ref EnvironmentName
+  NATGatewayEIP1:
+    Type: AWS::EC2::EIP
+    Properties:
+        Domain: vpc
+  RouteNATGateway:
+    DependsOn: NATGateway1
+    Type: AWS::EC2::Route
+    Properties:
+        RouteTableId: 
+          Fn::ImportValue:
+            'Fn::Sub': '${PrivateSubnetStackName}-PrivateRouteTable'
+        DestinationCidrBlock: '0.0.0.0/0'
+        NatGatewayId: !Ref NATGateway1
+
+  NATGateway2:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NATGatewayEIP2.AllocationId
+      SubnetId: 
+        Fn::ImportValue: 
+          'Fn::Sub': '${PublicSubnetStackName}-PublicSubnetID2'
+      Tags:
+        - Key: Name
+          Value: !Ref EnvironmentName
+  NATGatewayEIP2:
+    Type: AWS::EC2::EIP
+    Properties:
+        Domain: vpc
+  RouteNATGateway:
+    DependsOn: NATGateway2
+    Type: AWS::EC2::Route
+    Properties:
+        RouteTableId: 
+          Fn::ImportValue:
+            'Fn::Sub': '${PrivateSubnetStackName}-PrivateRouteTable'
+        DestinationCidrBlock: '0.0.0.0/0'
+        NatGatewayId: !Ref NATGateway2
+
+  NATGateway3:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NATGatewayEIP3.AllocationId
+      SubnetId: 
+        Fn::ImportValue: 
+          'Fn::Sub': '${PublicSubnetStackName}-PublicSubnetID3'
+      Tags:
+        - Key: Name
+          Value: !Ref EnvironmentName
+  NATGatewayEIP3:
+    Type: AWS::EC2::EIP
+    Properties:
+        Domain: vpc
+  RouteNATGateway:
+    DependsOn: NATGateway3
+    Type: AWS::EC2::Route
+    Properties:
+        RouteTableId: 
+          Fn::ImportValue:
+            'Fn::Sub': '${PrivateSubnetStackName}-PrivateRouteTable'
+        DestinationCidrBlock: '0.0.0.0/0'
+        NatGatewayId: !Ref NATGateway3
