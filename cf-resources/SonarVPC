@@ -173,7 +173,7 @@ Resources:
     Type: AWS::EC2::EIP
     Properties:
         Domain: vpc
-  RouteNATGateway:
+  RouteNATGateway1:
     DependsOn: NATGateway1
     Type: AWS::EC2::Route
     Properties:
@@ -193,7 +193,7 @@ Resources:
     Type: AWS::EC2::EIP
     Properties:
         Domain: vpc
-  RouteNATGateway:
+  RouteNATGateway2:
     DependsOn: NATGateway2
     Type: AWS::EC2::Route
     Properties:
@@ -214,7 +214,7 @@ Resources:
     Type: AWS::EC2::EIP
     Properties:
         Domain: vpc
-  RouteNATGateway:
+  RouteNATGateway3:
     DependsOn: NATGateway3
     Type: AWS::EC2::Route
     Properties:
