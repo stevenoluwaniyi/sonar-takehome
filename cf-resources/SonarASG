@@ -14,25 +14,62 @@ Parameters:
       - t3.medium
     Default: t3.micro
 
-  StackParameterName:
-    Description: Name of stack to import
-    Type: String
-    Default: SonarPrivate
-
-  SGStackParameterName:
-    Description: Name of stack to import
-    Type: String
-    Default: SonarSG
-
   ClusterStackParameterName:
     Description: Name of stack to import
     Type: String
-    Default: SonarECS
+    Default: SonarECSService
 
-  ProfiletackParameterName:
+  EnvironmentName:
+      Description: An environment name that is prefixed to resource names
+      Type: String
+      Default: EC2
+
+  VPCID:
     Description: Name of stack to import
     Type: String
-    Default: SonarInstanceProfile
+
+  AZ1:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Description: The list of Availability Zones to use for the subnets in the VPC.
+
+
+  AZ2:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Description: The list of Availability Zones to use for the subnets in the VPC.
+
+  AZ3:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Description: The list of Availability Zones to use for the subnets in the VPC.
+
+  PrivateSubnet1:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
+    Type: String
+
+  PrivateSubnet2:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
+    Type: String
+
+  PrivateSubnet3:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
+    Type: String
+
+  ASG1:
+      Description: ASG for instance in az1
+      Type: String
+      Default: ASG1
+
+  ASG2:
+      Description: ASG for instance in az2
+      Type: String
+      Default: ASG2
+
+  ASG3:
+      Description: ASG for instance in az2
+      Type: String
+      Default: ASG3
+      
+
+  
 
 Resources:
   myLaunchTemplate:
@@ -43,16 +80,16 @@ Resources:
         ImageId: !Ref LatestAmiId
         InstanceType: !Ref InstanceType
         SecurityGroupIds: 
-          - !ImportValue
-              'Fn::Sub': '${SGStackParameterName}-PrivateSG'
-        IamInstanceProfile:
-          Arn: 
-            !ImportValue
-              'Fn::Sub': '${ProfiletackParameterName}-Arn'
+          - !Ref SonarSecurityGroup
+        IamInstanceProfile: 
+          Arn: !GetAtt SonarProfile.Arn
         UserData:
           Fn::Base64: !Sub |
-            #!/bin/bash
-            echo ECS_CLUSTER=${ClusterStackParameterName}-Cluster >> /etc/ecs/ecs.config;
+                      #!/bin/bash
+                      cat <<'EOF' >> /etc/ecs/ecs.config
+                      ECS_CLUSTER=${ClusterStackParameterName}-Cluster
+                      ECS_LOGLEVEL=debug
+                      EOF
 
   myASG1:
     Type: AWS::AutoScaling::AutoScalingGroup
@@ -63,12 +100,10 @@ Resources:
       MaxSize: '1'
       MinSize: '1'
       DesiredCapacity: '1'
-      AvailabilityZones:
-        - Fn::ImportValue:
-            'Fn::Sub': '${StackParameterName}-AZ1'
-      VPCZoneIdentifier:
-          - Fn::ImportValue:
-              'Fn::Sub': '${StackParameterName}-PrivateSubnetID1'
+      AvailabilityZones: 
+        - !Ref AZ1
+      VPCZoneIdentifier: 
+        - !Ref PrivateSubnet1
 
   myASG2:
     Type: AWS::AutoScaling::AutoScalingGroup
@@ -79,12 +114,10 @@ Resources:
       MaxSize: '1'
       MinSize: '0'
       DesiredCapacity: '1'
-      AvailabilityZones:
-        - Fn::ImportValue:
-            'Fn::Sub': '${StackParameterName}-AZ2'
-      VPCZoneIdentifier:
-          - Fn::ImportValue:
-              'Fn::Sub': '${StackParameterName}-PrivateSubnetID2'
+      AvailabilityZones: 
+        - !Ref AZ2
+      VPCZoneIdentifier: 
+        - !Ref PrivateSubnet2
 
 
   myASG3:
@@ -96,43 +129,125 @@ Resources:
       MaxSize: '1'
       MinSize: '0'
       DesiredCapacity: '1'
-      AvailabilityZones:
-        - Fn::ImportValue:
-            'Fn::Sub': '${StackParameterName}-AZ3'
-      VPCZoneIdentifier:
-          - Fn::ImportValue:
-              'Fn::Sub': '${StackParameterName}-PrivateSubnetID3'
+      AvailabilityZones: 
+        - !Ref AZ3
+      VPCZoneIdentifier: 
+        - !Ref PrivateSubnet3
+
+  SonarProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties: 
+        InstanceProfileName: SonarProfile
+        Roles: 
+            - ecsInstanceRole
+
+  SonarEC2Instance1:
+    Type: AWS::EC2::Instance
+    Properties: 
+      AvailabilityZone: !Ref AZ1
+      LaunchTemplate: 
+        LaunchTemplateId: !Ref myLaunchTemplate
+        Version: 1
+      SecurityGroupIds: 
+        - !Ref SonarSecurityGroup
+      SubnetId: !Ref PrivateSubnet1
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-SonarInstance1"
+
+  SonarEC2Instance2:
+    Type: AWS::EC2::Instance
+    Properties: 
+      AvailabilityZone: !Ref AZ2
+      LaunchTemplate: 
+        LaunchTemplateId: !Ref myLaunchTemplate
+        Version: 1
+      SecurityGroupIds: 
+        - !Ref SonarSecurityGroup
+      SubnetId: !Ref PrivateSubnet2
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-SonarInstance2"
+
+  SonarEC2Instance3:
+    Type: AWS::EC2::Instance
+    Properties: 
+      AvailabilityZone: !Ref AZ3
+      LaunchTemplate: 
+        LaunchTemplateId: !Ref myLaunchTemplate
+        Version: 1
+      SecurityGroupIds: 
+        - !Ref SonarSecurityGroup
+      SubnetId: !Ref PrivateSubnet3
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-SonarInstance3"
+
+  SonarSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow http to client host
+      VpcId: !Ref VPCID
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 0
+          ToPort: 65535
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-SonarSG"
+
+
+  SonarSecurityGroupPrivate:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow http to client host
+      VpcId: !Ref VPCID
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-SonarPrivateSG"
 
 Outputs:
   ASG1:
     Description: ASG
     Value: !Ref myASG1
-    Export:
-      Name: !Sub "${AWS::StackName}-myASG1"
 
   ASG2:
     Description: ASG
     Value: !Ref myASG2
-    Export:
-      Name: !Sub "${AWS::StackName}-myASG2"
 
   ASG3:
     Description: ASG
     Value: !Ref myASG3
-    Export:
-      Name: !Sub "${AWS::StackName}-myASG3"
 
   LaunchTemplate:
     Description: Launch template
     Value: !Ref myLaunchTemplate
-    Export:
-      Name: !Sub "${AWS::StackName}-LaunchTemplate"
 
   LaunchTemplateVersion:
     Description: Version of specified launch template
     Value: !GetAtt myLaunchTemplate.LatestVersionNumber
-    Export:
-      Name: !Sub "${AWS::StackName}-LaunchVersion" 
 
- 
+  PrivateSecurityGroup:
+    Description: Private Security Group
+    Value: !Ref SonarSecurityGroupPrivate
 
+
+  SonarSecurityGroup:
+    Description: Private Security Group
+    Value: !Ref SonarSecurityGroup

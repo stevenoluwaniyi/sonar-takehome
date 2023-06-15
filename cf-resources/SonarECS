@@ -1,34 +1,27 @@
 
 Parameters:
-  StackParameterName:
-    Description: Name of stack to import
-    Type: String
-    Default: SonarECS
   EnvironmentName:
       Description: An environment name that is prefixed to resource names
       Type: String
       Default: SonarECS
 
-  # ASGParameterName:
-  #   Description: Name of stack to import
-  #   Type: String
-  #   Default: !Sub "${!ImportValue SonarASG-myASG1}"
-    
-
-  ASGArn1:
-      Description: An ARN
+  ASG1:
+      Description: ASG for instance in az1
       Type: String
-      Default: arn:aws:autoscaling:us-east-1:400252015451:autoScalingGroup:39217940-ca03-4ff6-a921-e84983c1a825:autoScalingGroupName/SonarASG-myASG1-PLO2WUAVSJF7
 
-  ASGArn2:
-      Description: An ARN
+  ASG2:
+      Description: ASG for instance in az2
       Type: String
-      Default: arn:aws:autoscaling:us-east-1:400252015451:autoScalingGroup:f99ea036-1c76-486d-9815-297f6a82f0d8:autoScalingGroupName/SonarASG-myASG2-VPW5XTZVAMCG
 
-  ASGArn3:
-      Description: An ARN
+  ASG3:
+      Description: ASG for instance in az2
       Type: String
-      Default: arn:aws:autoscaling:us-east-1:400252015451:autoScalingGroup:15ebe625-3724-45d9-b8d6-c84707e4bc13:autoScalingGroupName/SonarASG-myASG3-O3AQQVXUD03W
+
+  EnvironmentName:
+      Description: An environment name that is prefixed to resource names
+      Type: String
+      Default: SonarECSService
+      
 
 Resources:
   CapacityAssociation:
@@ -40,13 +33,15 @@ Resources:
         - !Ref CapacityProvider3
       Cluster: !Ref ECSCluster
       DefaultCapacityProviderStrategy:
-        - CapacityProvider: !Ref CapacityProvider2 
+        - Base: 0
+          Weight: 1
+          CapacityProvider: !Ref CapacityProvider2 
 
   CapacityProvider1:
       Type: AWS::ECS::CapacityProvider
       Properties: 
           AutoScalingGroupProvider: 
-              AutoScalingGroupArn: !Ref ASGArn1
+              AutoScalingGroupArn: !Ref ASG1
               ManagedScaling:
                 Status: ENABLED
                 TargetCapacity: 100
@@ -61,7 +56,7 @@ Resources:
     Type: AWS::ECS::CapacityProvider
     Properties: 
       AutoScalingGroupProvider: 
-        AutoScalingGroupArn: !Ref ASGArn2
+        AutoScalingGroupArn: !Ref ASG2
         ManagedScaling:
           Status: ENABLED
           TargetCapacity: 100
@@ -76,7 +71,7 @@ Resources:
       Type: AWS::ECS::CapacityProvider
       Properties: 
           AutoScalingGroupProvider: 
-              AutoScalingGroupArn: !Ref ASGArn3
+              AutoScalingGroupArn: !Ref ASG3
               ManagedScaling:
                 Status: ENABLED
                 TargetCapacity: 100
@@ -94,32 +89,56 @@ Resources:
               - "${EnvironmentName}-Cluster"
               - EnvironmentName: !Ref EnvironmentName
 
+  TaskDefinition: 
+    Type: AWS::ECS::TaskDefinition
+    Properties: 
+      RequiresCompatibilities:
+        - "EC2"
+      TaskRoleArn: "ecsTaskExecutionRole"
+      ExecutionRoleArn: "ecsTaskExecutionRole"
+      ContainerDefinitions: 
+        - 
+          Name: "my-app"
+          MountPoints: 
+            - 
+              SourceVolume: "my-vol"
+              ContainerPath: "/var/www/my-vol"
+          Image: "amazon/amazon-ecs-sample"
+          Cpu: 256
+          Memory: 512
+          Essential: true
+          LogConfiguration:
+            LogDriver: "awslogs"
+            Options:
+              awslogs-group: "/ecs/ec2-definition"
+              awslogs-region: "us-east-1"
+              awslogs-stream-prefix: "ecs"
+      Volumes: 
+        - 
+          Host: 
+            SourcePath: "/var/lib/docker/vfs/dir/"
+          Name: "my-vol"
+      NetworkMode: awsvpc
+
+
 
 Outputs:
     CapacityCluster1:
       Description: ECSCluster based on AZ 
       Value: !Ref CapacityProvider1
-      Export:
-        Name: !Sub "${AWS::StackName}-CapacityProvider1"
 
     CapacityCluster2:
       Description: ECSCluster based on AZ 
       Value: !Ref CapacityProvider2
-      Export:
-        Name: !Sub "${AWS::StackName}-CapacityProvider2"
 
     CapacityCluster3:
       Description: ECSCluster based on AZ 
       Value: !Ref CapacityProvider3
-      Export:
-        Name: !Sub "${AWS::StackName}-CapacityProvider3"
 
     ECSCluster:
       Description: ECSCluster based on AZ 
       Value: !Ref ECSCluster
-      Export:
-        Name: !Sub "${AWS::StackName}-Cluster"
 
-
-
-
+    TaskDefinition:
+      Description: Task Definition
+      Value: !Ref TaskDefinition

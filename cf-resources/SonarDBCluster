@@ -1,43 +1,68 @@
 Parameters:
-  StackParameterName:
-    Description: Name of stack to import
+  VPCID:
+    Description: Name of VPCID
     Type: String
-    Default: SonarPrivate
+
   EnvironmentName:
       Description: An environment name that is prefixed to resource names
       Type: String
-      Default: SonarDBCluster
+      Default: SonarDB
+
+  PrivateSubnet1:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
+    Type: String
+
+  PrivateSubnet2:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
+    Type: String
+
+  PrivateSubnet3:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
+    Type: String
+
+  AZ1:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Description: The list of Availability Zones to use for the subnets in the VPC.
+    Default: us-east-1a
+
+  AZ2:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Description: The list of Availability Zones to use for the subnets in the VPC.
+    Default: us-east-1b
+
+  AZ3:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Description: The list of Availability Zones to use for the subnets in the VPC.
+    Default: us-east-1c
+
+  DBInstanceName:
+      Description: DB instance
+      Type: String
+      Default: db.t3.small
 
 Resources:
-
   myDBSubnetGroup1: 
     Properties: 
       DBSubnetGroupDescription: myDBSubnetGroup1
       SubnetIds: 
-        - Fn::ImportValue:
-            'Fn::Sub': '${StackParameterName}-PrivateSubnetID1'
-        - Fn::ImportValue:
-            'Fn::Sub': '${StackParameterName}-PrivateSubnetID2'
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
     Type: "AWS::RDS::DBSubnetGroup"
 
   myDBSubnetGroup2: 
     Properties:
       DBSubnetGroupDescription: myDBSubnetGroup2
       SubnetIds: 
-        - Fn::ImportValue:
-            'Fn::Sub': '${StackParameterName}-PrivateSubnetID2'
-        - Fn::ImportValue:
-            'Fn::Sub': '${StackParameterName}-PrivateSubnetID3'
+        - !Ref PrivateSubnet2
+        - !Ref PrivateSubnet3
     Type: "AWS::RDS::DBSubnetGroup"
 
   myDBSubnetGroup3: 
     Properties: 
       DBSubnetGroupDescription: myDBSubnetGroup3
       SubnetIds: 
-        - Fn::ImportValue:
-            'Fn::Sub': '${StackParameterName}-PrivateSubnetID1'
-        - Fn::ImportValue:
-            'Fn::Sub': '${StackParameterName}-PrivateSubnetID3'
+        - !Ref PrivateSubnet3
+        - !Ref PrivateSubnet1
     Type: "AWS::RDS::DBSubnetGroup"
 
   RDSCluster1: 
@@ -48,27 +73,27 @@ Resources:
       Engine: aurora-mysql
       EngineMode: provisioned
       AvailabilityZones: 
-        - !Select [ 0, !GetAZs  '' ]
+        - !Ref AZ1
       Tags:
         - Key: Name
           Value: !Sub
-            - "${EnvironmentName}1"
+            - "${EnvironmentName}Cluster1"
             - EnvironmentName: !Ref EnvironmentName
     Type: "AWS::RDS::DBCluster"
 
   RDSCluster2: 
     Properties: 
       DBSubnetGroupName: !Ref myDBSubnetGroup2
-      MasterUserPassword: password
+      MasterUserPassword: password 
       MasterUsername: user
       Engine: aurora-mysql
       EngineMode: provisioned
       AvailabilityZones: 
-        - !Select [ 1, !GetAZs  '' ]
+        - !Ref AZ2
       Tags:
         - Key: Name
           Value: !Sub
-            - "${EnvironmentName}2"
+            - "${EnvironmentName}Cluster2"
             - EnvironmentName: !Ref EnvironmentName
     Type: "AWS::RDS::DBCluster"
 
@@ -80,48 +105,67 @@ Resources:
       Engine: aurora-mysql
       EngineMode: provisioned
       AvailabilityZones:
-        - !Select [ 2, !GetAZs  '' ]
+        - !Ref AZ3
       Tags:
         - Key: Name
           Value: !Sub
-            - "${EnvironmentName}3"
+            - "${EnvironmentName}Cluster3"
             - EnvironmentName: !Ref EnvironmentName
     Type: "AWS::RDS::DBCluster"
 
-Outputs:
-  DBCluster1:
-    Description: A reference to the created DB cluster
-    Value: !Ref RDSCluster1
-    Export:
-      Name: !Sub "${AWS::StackName}-DBCluster1"
+  RDSDBInstance1: 
+    Properties: 
+      DBClusterIdentifier: !Ref RDSCluster1
+      DBInstanceClass: !Ref DBInstanceName
+      DBParameterGroupName: 
+        Ref: RDSDBParameterGroup
+      DBSubnetGroupName: !Ref myDBSubnetGroup1
+      Engine: aurora-mysql
+      Tags:
+        - Key: Name
+          Value: !Sub
+            - "${EnvironmentName}Instance1"
+            - EnvironmentName: !Ref EnvironmentName
+    Type: "AWS::RDS::DBInstance"
 
-  DBCluster2:
-    Description: A reference to the created DB cluster
-    Value: !Ref RDSCluster2
-    Export:
-      Name: !Sub "${AWS::StackName}-DBCluster2"
+  RDSDBInstance2: 
+    Properties: 
+      DBClusterIdentifier: !Ref RDSCluster2
+      DBInstanceClass: !Ref DBInstanceName
+      DBParameterGroupName: 
+        Ref: RDSDBParameterGroup
+      DBSubnetGroupName: !Ref myDBSubnetGroup2
+      Engine: aurora-mysql
+      Tags:
+        - Key: Name
+          Value: !Sub
+            - "${EnvironmentName}Instance2"
+            - EnvironmentName: !Ref EnvironmentName
+    Type: "AWS::RDS::DBInstance"
 
-  DBCluster3:
-    Description: A reference to the created DB cluster
-    Value: !Ref RDSCluster3
-    Export:
-      Name: !Sub "${AWS::StackName}-DBCluster3"
+  RDSDBInstance3: 
+    Properties: 
+      DBClusterIdentifier: !Ref RDSCluster3
+      DBInstanceClass: !Ref DBInstanceName
+      DBParameterGroupName: 
+        Ref: RDSDBParameterGroup
+      DBSubnetGroupName: !Ref myDBSubnetGroup3
+      Engine: aurora-mysql
+      Tags:
+        - Key: Name
+          Value: !Sub
+            - "${EnvironmentName}Instance3"
+            - EnvironmentName: !Ref EnvironmentName
+    Type: "AWS::RDS::DBInstance"
 
-  DBSubnetGroup1:
-    Description: A reference to the created DB SubnetGroup
-    Value: !Ref myDBSubnetGroup1
-    Export:
-      Name: !Sub "${AWS::StackName}-DBSubnetGroup1"
+  RDSDBParameterGroup:
+    Type: 'AWS::RDS::DBParameterGroup'
+    Properties:
+      Description: CloudFormation Sample Aurora Parameter Group
+      Family: aurora-mysql5.7
+      Parameters:
+        sql_mode: IGNORE_SPACE
+        max_allowed_packet: 1024
+        innodb_buffer_pool_size: '{DBInstanceClassMemory*3/4}'
 
-  DBSubnetGroup2:
-    Description: A reference to the created DB SubnetGroup
-    Value: !Ref myDBSubnetGroup2
-    Export:
-      Name: !Sub "${AWS::StackName}-DBSubnetGroup2"
-
-  DBSubnetGroup3:
-    Description: A reference to the created DB SubnetGroup
-    Value: !Ref myDBSubnetGroup3
-    Export:
-      Name: !Sub "${AWS::StackName}-DBSubnetGroup3"
 
