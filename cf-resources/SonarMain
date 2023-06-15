@@ -1,0 +1,179 @@
+Parameters:
+  EnvironmentName:
+    Description: An environment name that is prefixed to resource names
+    Type: String
+
+  VpcCIDR:
+    Description: Please enter the IP range (CIDR notation) for this VPC
+    Type: String
+    Default: 10.192.0.0/16
+
+  AWSRegion:
+    Description: Region to deploy VPC
+    Type: String
+    Default: us-east-1
+
+  PublicSonarSubnet1:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
+    Type: String
+    Default: 10.192.10.0/24
+
+  PublicSonarSubnet2:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
+    Type: String
+    Default: 10.192.50.0/24
+
+  PublicSonarSubnet3:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
+    Type: String
+    Default: 10.192.60.0/24
+
+  PrivateSonarSubnet1:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
+    Type: String
+    Default: 10.192.20.0/24
+  
+  PrivateSonarSubnet2:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
+    Type: String
+    Default: 10.192.30.0/24
+
+  PrivateSonarSubnet3:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
+    Type: String
+    Default: "10.192.40.0/24"
+
+  S3BucketName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-.]*[0-9a-zA-Z])*$
+    ConstraintDescription: Bucket name can include numbers, lowercase letters, uppercase letters, periods (.), and hyphens (-). It cannot start or end with a hyphen (-).
+    Description: S3 bucket name for the Nested Stacks. S3 bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).
+    Type: String
+
+  VPCSubnetStackName:
+    Description: Import public subnet
+    Type: String
+    Default: SonarVPC
+
+  AZ1:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Description: The list of Availability Zones to use for the subnets in the VPC.
+    Default: us-east-1a
+
+  AZ2:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Description: The list of Availability Zones to use for the subnets in the VPC.
+    Default: us-east-1b
+
+  AZ3:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Description: The list of Availability Zones to use for the subnets in the VPC.
+    Default: us-east-1c
+
+  ASG1:
+    Type: String
+    Description: The list of Availability Zones to use for the subnets in the VPC.
+    Default: ASG1
+
+  ASG2:
+    Type: String
+    Description: The list of Availability Zones to use for the subnets in the VPC.
+    Default: ASG2
+
+  ASG3:
+    Type: String
+    Description: The list of Availability Zones to use for the subnets in the VPC.
+    Default: ASG3
+    
+
+Resources:
+  SonarVPC:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://${S3BucketName}.s3.amazonaws.com/SonarVPC
+      TimeoutInMinutes: 20
+      Parameters:
+        VpcCIDR: !Ref VpcCIDR
+        EnvironmentName: !Ref EnvironmentName
+        PublicSonarSubnet1: !Ref PublicSonarSubnet1
+        PublicSonarSubnet2: !Ref PublicSonarSubnet2
+        PublicSonarSubnet3: !Ref PublicSonarSubnet3
+        PrivateSonarSubnet1: !Ref PrivateSonarSubnet1
+        PrivateSonarSubnet2: !Ref PrivateSonarSubnet2
+        PrivateSonarSubnet3: !Ref PrivateSonarSubnet3
+        AZ1: !Sub "${AWS::Region}a"
+        AZ2: !Sub "${AWS::Region}b"
+        AZ3: !Sub "${AWS::Region}c"
+
+  SonarASG:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://${S3BucketName}.s3.amazonaws.com/SonarASG
+      TimeoutInMinutes: 20
+      Parameters:
+        VPCID: !GetAtt SonarVPC.Outputs.VPC
+        PrivateSubnet1: !GetAtt SonarVPC.Outputs.PrivateSubnetID1
+        PrivateSubnet2: !GetAtt SonarVPC.Outputs.PrivateSubnetID2
+        PrivateSubnet3: !GetAtt SonarVPC.Outputs.PrivateSubnetID3
+        AZ1: !GetAtt SonarVPC.Outputs.AZ1
+        AZ2: !GetAtt SonarVPC.Outputs.AZ2
+        AZ3: !GetAtt SonarVPC.Outputs.AZ3
+
+  SonarECS:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: SonarASG
+    Properties:
+      TemplateURL: !Sub https://${S3BucketName}.s3.amazonaws.com/SonarECS
+      TimeoutInMinutes: 20
+      Parameters:
+        ASG1: !GetAtt SonarASG.Outputs.ASG1
+        ASG2: !GetAtt SonarASG.Outputs.ASG2
+        ASG3: !GetAtt SonarASG.Outputs.ASG3
+
+  SonarALB:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: SonarVPC
+    Properties:
+      TemplateURL: !Sub https://${S3BucketName}.s3.amazonaws.com/SonarALB
+      TimeoutInMinutes: 20
+      Parameters:
+        VPCID: !GetAtt SonarVPC.Outputs.VPC
+        PublicSubnet1: !GetAtt SonarVPC.Outputs.PublicSubnetID1
+        PublicSubnet2: !GetAtt SonarVPC.Outputs.PublicSubnetID2
+        PublicSubnet3: !GetAtt SonarVPC.Outputs.PublicSubnetID3
+
+  SonarDBCluster:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: SonarVPC
+    Properties:
+      TemplateURL: !Sub https://${S3BucketName}.s3.amazonaws.com/SonarDBCluster
+      TimeoutInMinutes: 20
+      Parameters:
+        VPCID: !GetAtt SonarVPC.Outputs.VPC
+        PrivateSubnet1: !GetAtt SonarVPC.Outputs.PrivateSubnetID1
+        PrivateSubnet2: !GetAtt SonarVPC.Outputs.PrivateSubnetID2
+        PrivateSubnet3: !GetAtt SonarVPC.Outputs.PrivateSubnetID3
+        AZ1: !GetAtt SonarVPC.Outputs.AZ1
+        AZ2: !GetAtt SonarVPC.Outputs.AZ2
+        AZ3: !GetAtt SonarVPC.Outputs.AZ3
+
+  SonarECSService:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://${S3BucketName}.s3.amazonaws.com/SonarECSService
+      TimeoutInMinutes: 40
+      Parameters:
+        PrivateSubnet1: !GetAtt SonarVPC.Outputs.PrivateSubnetID1
+        PrivateSubnet2: !GetAtt SonarVPC.Outputs.PrivateSubnetID2
+        PrivateSubnet3: !GetAtt SonarVPC.Outputs.PrivateSubnetID3
+        PublicSubnet1: !GetAtt SonarVPC.Outputs.PublicSubnetID1
+        PublicSubnet2: !GetAtt SonarVPC.Outputs.PublicSubnetID2
+        PublicSubnet3: !GetAtt SonarVPC.Outputs.PublicSubnetID3
+        CapacityProvider1: !GetAtt SonarECS.Outputs.CapacityCluster1
+        CapacityProvider2: !GetAtt SonarECS.Outputs.CapacityCluster2
+        CapacityProvider3: !GetAtt SonarECS.Outputs.CapacityCluster3
+        TargetGroupARN1: !GetAtt SonarALB.Outputs.SonarTGARN1
+        TargetGroupARN2: !GetAtt SonarALB.Outputs.SonarTGARN2
+        TargetGroupARN3: !GetAtt SonarALB.Outputs.SonarTGARN3
+        ClusterID: !GetAtt SonarECS.Outputs.ECSCluster
+        SecurityGroup: !GetAtt SonarASG.Outputs.SonarSecurityGroup
+        TaskDefinitionID: !GetAtt SonarECS.Outputs.TaskDefinition

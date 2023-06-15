@@ -1,12 +1,29 @@
 Parameters:
-  StackParameterName:
-    Description: Name of stack to import
-    Type: String
-    Default: SonarPrivate
   EnvironmentName:
       Description: An environment name that is prefixed to resource names
       Type: String
-      Default: SonarALB
+      Default: Sonar
+
+  TGPort:
+      Description: Port for Target Group
+      Type: Number
+      Default: 3001
+
+  VPCID:
+    Description: VPCID
+    Type: String
+
+  PublicSubnet1:
+    Description: Subnet for az1
+    Type: String
+
+  PublicSubnet2:
+    Description: Subnet for az2
+    Type: String
+
+  PublicSubnet3:
+    Description: Subnet for az3
+    Type: String
 
 Resources:
   LoadBalancer1:
@@ -17,13 +34,11 @@ Resources:
       Scheme: internet-facing
       
       Subnets: 
-        - Fn::ImportValue:
-            'Fn::Sub': '${StackParameterName}-PrivateSubnetID1'
-        - Fn::ImportValue:
-            'Fn::Sub': '${StackParameterName}-PrivateSubnetID2'
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
       Tags:
         - Key: Name
-          Value: !Sub "${EnvironmentName}1"
+          Value: !Sub "${EnvironmentName}ELB-1"
 
   LoadBalancer2:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
@@ -31,16 +46,12 @@ Resources:
       IpAddressType: ipv4
       Name: SonarALB2
       Scheme: internet-facing
-      # SecurityGroups: 
-      #   - String
       Subnets: 
-        - Fn::ImportValue:
-            'Fn::Sub': '${StackParameterName}-PrivateSubnetID1'
-        - Fn::ImportValue:
-            'Fn::Sub': '${StackParameterName}-PrivateSubnetID2'
+        - !Ref PublicSubnet2
+        - !Ref PublicSubnet3
       Tags:
         - Key: Name
-          Value: !Sub "${EnvironmentName}2"
+          Value: !Sub "${EnvironmentName}ELB-2"
 
   LoadBalancer3:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
@@ -48,13 +59,65 @@ Resources:
       IpAddressType: ipv4
       Name: SonarALB3
       Scheme: internet-facing
-      # SecurityGroups: 
-      #   - String
       Subnets: 
-        - Fn::ImportValue:
-            'Fn::Sub': '${StackParameterName}-PrivateSubnetID3'
-        - Fn::ImportValue:
-            'Fn::Sub': '${StackParameterName}-PrivateSubnetID1'
+        - !Ref PublicSubnet3
+        - !Ref PublicSubnet1
       Tags:
         - Key: Name
-          Value: !Sub "${EnvironmentName}3"
+          Value: !Sub "${EnvironmentName}ELB-3"
+
+  SonarTG1:
+      Type: AWS::ElasticLoadBalancingV2::TargetGroup
+      Properties: 
+          IpAddressType: ipv4
+          Name: !Sub "${EnvironmentName}-TG1"
+          Port: !Sub ${TGPort}
+          Protocol: HTTP
+          ProtocolVersion: HTTP1
+          Tags:
+              - Key: Name
+                Value: !Sub "${EnvironmentName}-TG1"
+          TargetType: ip
+          VpcId: !Ref VPCID
+
+  SonarTG2:
+      Type: AWS::ElasticLoadBalancingV2::TargetGroup
+      Properties: 
+          IpAddressType: ipv4
+          Name: !Sub "${EnvironmentName}-TG2"
+          Port: !Sub ${TGPort}
+          Protocol: HTTP
+          ProtocolVersion: HTTP1
+          Tags:
+              - Key: Name
+                Value: !Sub "${EnvironmentName}-TG2"
+          TargetType: ip
+          VpcId: !Ref VPCID
+
+  SonarTG3:
+      Type: AWS::ElasticLoadBalancingV2::TargetGroup
+      Properties: 
+          IpAddressType: ipv4
+          Name: !Sub "${EnvironmentName}TG-3"
+          Port: !Sub ${TGPort}
+          Protocol: HTTP
+          ProtocolVersion: HTTP1
+          Tags:
+              - Key: Name
+                Value: !Sub "${EnvironmentName}TG-3"
+          TargetType: ip
+          VpcId: !Ref VPCID
+
+
+Outputs:
+    SonarTGARN1:
+        Description: TG for Sonar
+        Value: !GetAtt SonarTG1.TargetGroupArn
+
+    SonarTGARN2:
+        Description: TG for Sonar
+        Value: !GetAtt SonarTG2.TargetGroupArn
+
+    SonarTGARN3:
+        Description: TG for Sonar
+        Value: !GetAtt SonarTG3.TargetGroupArn
