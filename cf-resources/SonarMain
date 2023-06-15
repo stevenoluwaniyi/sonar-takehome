@@ -165,9 +165,6 @@ Resources:
         PrivateSubnet1: !GetAtt SonarVPC.Outputs.PrivateSubnetID1
         PrivateSubnet2: !GetAtt SonarVPC.Outputs.PrivateSubnetID2
         PrivateSubnet3: !GetAtt SonarVPC.Outputs.PrivateSubnetID3
-        PublicSubnet1: !GetAtt SonarVPC.Outputs.PublicSubnetID1
-        PublicSubnet2: !GetAtt SonarVPC.Outputs.PublicSubnetID2
-        PublicSubnet3: !GetAtt SonarVPC.Outputs.PublicSubnetID3
         CapacityProvider1: !GetAtt SonarECS.Outputs.CapacityCluster1
         CapacityProvider2: !GetAtt SonarECS.Outputs.CapacityCluster2
         CapacityProvider3: !GetAtt SonarECS.Outputs.CapacityCluster3
